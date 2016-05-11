@@ -1,0 +1,82 @@
+DECLARE @FoodTable AS TABLE(
+	NodeID HIERARCHYID NOT NULL,
+	NodeString VARCHAR(512) NOT NULL,
+	Name VARCHAR(512) NOT NULL
+)
+
+-- FOODS
+DECLARE @FoodNode AS HIERARCHYID = HIERARCHYID::GetRoot();
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@FoodNode, @FoodNode.ToString(), 'Food')
+
+-- FRUTS
+DECLARE @FruitsNode AS HIERARCHYID = @FoodNode.GetDescendant(NULL, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@FruitsNode, @FruitsNode.ToString(), 'Fruits')
+
+-- RED
+DECLARE @RedNode AS HIERARCHYID = @FruitsNode.GetDescendant(NULL, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@RedNode, @RedNode.ToString(), 'Red')
+
+-- CHERRY
+DECLARE @CherryNode AS HIERARCHYID = @RedNode.GetDescendant(NULL, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@CherryNode, @CherryNode.ToString(), 'Cherry')
+
+-- YELLOW
+DECLARE @YellowNode AS HIERARCHYID = @FruitsNode.GetDescendant(@RedNode, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@YellowNode, @YellowNode.ToString(), 'Yellow')
+
+-- BANANA
+DECLARE @BananaNode AS HIERARCHYID = @YellowNode.GetDescendant(NULL, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@BananaNode, @BananaNode.ToString(), 'Banana')
+
+-- MEAT
+DECLARE @MeatNode AS HIERARCHYID = @FoodNode.GetDescendant(@FruitsNode, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@MeatNode, @MeatNode.ToString(), 'Meat')
+
+-- BEEF
+DECLARE @BeefNode AS HIERARCHYID = @MeatNode.GetDescendant(NULL, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@BeefNode, @BeefNode.ToString(), 'Beef')
+
+-- PORK
+DECLARE @PorkNode AS HIERARCHYID = @MeatNode.GetDescendant(@BeefNode, NULL)
+INSERT INTO @FoodTable(NodeID, NodeString, Name) VALUES(@PorkNode, @PorkNode.ToString(), 'Pork')
+
+
+SELECT * FROM @FoodTable
+WHERE NodeID.IsDescendantOf(0x68) = 1
+
+
+
+
+
+=================== MODIFIED PREORDER TREE TRAVERSAL ALGORTHM ========================
+
+
+CREATE TABLE #FoodTable
+(
+    Parent VARCHAR(512) NULL,
+	Name VARCHAR(512) NOT NULL,
+	LFT INT NOT NULL,
+	RGT INT NOT NULL
+)
+
+
+INSERT INTO #FoodTable(Parent,Name,LFT,RGT) VALUES(NULL, 'Food', 1, 2)
+
+DECLARE @Parent VARCHAR(512) = 'Food'
+DECLARE @Child VARCHAR(512) = 'Fruits'
+
+DECLARE @LFT INT = (SELECT LFT FROM #FoodTable WHERE Name = @Parent)
+DECLARE @RGT INT = (SELECT RGT FROM #FoodTable WHERE Name = @Parent)
+
+UPDATE #FoodTable SET RGT = RGT + 2 WHERE RGT > @LFT
+UPDATE #FoodTable SET LFT = LFT + 2 WHERE LFT > @LFT
+
+INSERT INTO #FoodTable(Parent,Name,LFT,RGT) VALUES(@Parent, @Child, @LFT + 1, @LFT + 2)
+
+
+SELECT * FROM #FoodTable
+
+-- IF OBJECT_ID(N'tempdb..#FoodTable', N'U') IS NOT NULL DROP TABLE #FoodTable;
+
+-- SELECT * FROM #FoodTable WHERE LFT BETWEEN 2 AND 3 ORDER BY LFT ASC
+
